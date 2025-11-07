@@ -1,0 +1,32 @@
+# Environment
+venv/
+env/
+ENV/
+.env
+.venv
+.env/
+.venv/
+
+# Python cache files
+__pycache__/
+*.py[cod]
+*.so
+.pytest_cache/
+
+# Django database/ Logs
+*.log
+db.sqlite3
+media/
+staticfiles/
+static/admin/
+static/rest_framework/
+
+# IDEs / Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS-generated files
+.DS_Store
+Thumbs.db
