@@ -30,3 +30,5 @@ static/rest_framework/
 # OS-generated files
 .DS_Store
 Thumbs.db
+
+up.sh
