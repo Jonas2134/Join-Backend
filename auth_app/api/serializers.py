@@ -41,3 +41,35 @@ class RegisterSerializer(serializers.ModelSerializer):
         user.set_password(pw)
         user.save()
         return user
+
+
+class LoginSerializer(TokenObtainPairSerializer):
+    username = serializers.CharField()
+    password = serializers.CharField(write_only=True)
+
+    def validate(self, attrs):
+        username = attrs.get('username')
+        password = attrs.get('password')
+
+        user = self._check_user_exist(username)
+        self._check_password(user, password)
+
+        attrs['username'] = user.username
+        data = super().validate(attrs)
+        data['user'] = {
+            'id': user.id,
+            'username': user.username,
+            'email': user.email,
+        }
+        return data
+
+    def _check_user_exist(self, username):
+        try:
+            user = User.objects.get(username=username)
+            return user
+        except User.DoesNotExist:
+            raise serializers.ValidationError("User with this username does not exist.")
+    
+    def _check_password(self, user, password) -> None:
+        if not user.check_password(password):
+            raise serializers.ValidationError("Incorrect password.")
