@@ -37,7 +37,7 @@ class RegisterSerializer(serializers.ModelSerializer):
         pw = self.validated_data['password']
         email = self.validated_data['email']
         username = self.validated_data['username']
-        user = User(email=email, username=username, is_active=True)
+        user = User(email=email, username=username, is_active=True, is_guest=False)
         user.set_password(pw)
         user.save()
         return user

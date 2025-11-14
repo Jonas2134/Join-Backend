@@ -1,3 +1,4 @@
+import uuid
 from rest_framework import status, generics
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -6,7 +7,14 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from rest_framework_simplejwt.tokens import RefreshToken, TokenError
 
 from .serializers import RegisterSerializer, LoginSerializer
+from auth_app.models import CustomUserProfile
 
+
+COOKIE_KWARGS = {
+    'httponly': True,
+    'secure': False,
+    'samesite': 'Lax'
+}
 
 class RegisterView(generics.CreateAPIView):
     serializer_class = RegisterSerializer
@@ -31,24 +39,9 @@ class LoginView(TokenObtainPairView):
             data = response.data
             refresh = data.get('refresh')
             access = data.get('access')
-            response = Response(
-                {"detail": "Login successfully!", "user": data.get('user')},
-                status=status.HTTP_200_OK
-            )
-            response.set_cookie(
-                key='refresh_token',
-                value=refresh,
-                httponly=True,
-                secure=True,
-                samesite='Lax'
-            )
-            response.set_cookie(
-                key='access_token',
-                value=access,
-                httponly=True,
-                secure=True,
-                samesite='Lax'
-            )
+            response = Response({"detail": "Login successfully!"}, status=status.HTTP_200_OK)
+            response.set_cookie(key='refresh_token', value=refresh, **COOKIE_KWARGS)
+            response.set_cookie(key='access_token', value=access, **COOKIE_KWARGS)
         return response
 
 
@@ -56,7 +49,9 @@ class LogoutView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
+        user = request.user
         refresh_token = request.COOKIES.get('refresh_token')
+
         if refresh_token is None:
             return Response({"detail": "Refresh token not found."}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -69,11 +64,15 @@ class LogoutView(APIView):
         response = Response({"detail": "Log-Out successfully!"}, status=status.HTTP_200_OK)
         response.delete_cookie('refresh_token')
         response.delete_cookie('access_token')
+
+        if user.is_guest:
+            user.delete()
+
         return response
 
 
 class CookieTokenRefreshView(TokenRefreshView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
 
     def post(self, request, *args, **kwargs):
         refresh_token = request.COOKIES.get('refresh_token')
@@ -85,16 +84,38 @@ class CookieTokenRefreshView(TokenRefreshView):
         except Exception:
             return Response({"detail": "Invalid refresh token."}, status=status.HTTP_401_UNAUTHORIZED)
         access_token = serializer.validated_data.get("access")
+        new_refresh = serializer.validated_data.get("refresh")
         response = Response({"access": "Access Token refreshed successfully."}, status=status.HTTP_200_OK)
-        response.set_cookie(
-            key='access_token',
-            value=access_token,
-            httponly=True,
-            secure=True,
-            samesite='Lax'
-        )
+        response.set_cookie(key='access_token', value=access_token, **COOKIE_KWARGS)
+        if new_refresh:
+            response.set_cookie(key='refresh_token', value=new_refresh, **COOKIE_KWARGS)
         return response
 
 
 class GuestLoginView(APIView):
-    pass
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        guest_user = CustomUserProfile.objects.create(
+            username=f"guest_{uuid.uuid4().hex[:8]}",
+            is_guest=True
+        )
+        guest_user.set_unusable_password()
+        guest_user.save()
+
+        refresh = RefreshToken.for_user(guest_user)
+        access = refresh.access_token
+
+        response = Response({
+            "detail": "Guest Login successfully!",
+            "user": {
+                "id": guest_user.id,
+                "username": guest_user.username,
+                "is_guest": guest_user.is_guest
+            }
+        }, status=status.HTTP_200_OK)
+
+        response.set_cookie(key='refresh_token', value=str(refresh), **COOKIE_KWARGS)
+        response.set_cookie(key='access_token', value=str(access), **COOKIE_KWARGS)
+
+        return response
