@@ -31,3 +31,38 @@ class BoardCreateSerializer(serializers.ModelSerializer):
         final_members.add(request.user)
         board.members.set(final_members)
         return board
+
+
+class BoardDetailSerializer(serializers.ModelSerializer):
+    members = serializers.PrimaryKeyRelatedField(queryset=CustomUserProfile.objects.all(), many=True)
+    
+    class Meta:
+        model = Boards
+        fields = ('id', 'title', 'description', 'owner', 'members', 'status', 'created_at', 'updated_at')
+
+
+class BoardUpdateSerializer(serializers.ModelSerializer):
+    members = serializers.PrimaryKeyRelatedField(queryset=CustomUserProfile.objects.all(), many=True, required=False)
+    
+    class Meta:
+        model = Boards
+        fields = ('title', 'description', 'members', 'status')
+
+    def validate(self, attrs):
+        request = self.context['request']
+        if "owner" in attrs:
+            attrs.pop("owner")
+        if request.user.is_guest and 'members' in attrs:
+            raise serializers.ValidationError("Guest users cannot modify board members.")
+        return attrs
+
+    def update(self, instance, validated_data):
+        members = validated_data.pop('members', None)
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        if members is not None:
+            final_members = set(members)
+            final_members.add(instance.owner)
+            instance.members.set(final_members)
+        instance.save()
+        return instance
