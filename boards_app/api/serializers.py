@@ -1,20 +1,20 @@
 from rest_framework import serializers
 
 from auth_app.models import CustomUserProfile
-from boards_app.models import Boards
+from boards_app.models import Board
 
 
 class BoardListSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Boards
-        fields = ('id', 'title', 'status')
+        model = Board
+        fields = ('id', 'title', 'is_active')
 
 
 class BoardCreateSerializer(serializers.ModelSerializer):
     members = serializers.PrimaryKeyRelatedField(queryset=CustomUserProfile.objects.all(), many=True, required=False, allow_empty=True)
     
     class Meta:
-        model = Boards
+        model = Board
         fields = ('title', 'description', 'members')
 
     def validate(self, attrs):
@@ -26,7 +26,7 @@ class BoardCreateSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         request = self.context['request']
         members = validated_data.pop('members', [])
-        board = Boards.objects.create(owner=request.user, **validated_data)
+        board = Board.objects.create(owner=request.user, **validated_data)
         final_members = set(members)
         final_members.add(request.user)
         board.members.set(final_members)
@@ -37,16 +37,16 @@ class BoardDetailSerializer(serializers.ModelSerializer):
     members = serializers.PrimaryKeyRelatedField(queryset=CustomUserProfile.objects.all(), many=True)
     
     class Meta:
-        model = Boards
-        fields = ('id', 'title', 'description', 'owner', 'members', 'status', 'created_at', 'updated_at')
+        model = Board
+        fields = ('id', 'title', 'description', 'owner', 'members', 'is_active', 'created_at', 'updated_at')
 
 
 class BoardUpdateSerializer(serializers.ModelSerializer):
     members = serializers.PrimaryKeyRelatedField(queryset=CustomUserProfile.objects.all(), many=True, required=False)
     
     class Meta:
-        model = Boards
-        fields = ('title', 'description', 'members', 'status')
+        model = Board
+        fields = ('title', 'description', 'members', 'is_active')
 
     def validate(self, attrs):
         request = self.context['request']

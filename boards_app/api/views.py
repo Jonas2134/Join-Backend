@@ -3,7 +3,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
 
-from boards_app.models import Boards
+from boards_app.models import Board
 from .serializers import BoardListSerializer, BoardCreateSerializer, BoardDetailSerializer, BoardUpdateSerializer
 
 
@@ -11,7 +11,7 @@ class BoardListCreateView(generics.ListCreateAPIView):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        return Boards.objects.filter(owner=self.request.user)
+        return Board.objects.filter(owner=self.request.user)
     
     def get_serializer_class(self):
         if self.request.method == 'POST':
@@ -27,7 +27,7 @@ class BoardListCreateView(generics.ListCreateAPIView):
 
 class BoardDetailViewSet(viewsets.GenericViewSet):
     permission_classes = [IsAuthenticated]
-    queryset = Boards.objects.all()
+    queryset = Board.objects.all()
     lookup_field = 'pk'
 
     def get_serializer_class(self):
@@ -59,3 +59,7 @@ class BoardDetailViewSet(viewsets.GenericViewSet):
             return Response({"detail": "Only the owner can delete the board."}, status=status.HTTP_403_FORBIDDEN)
         board.delete()
         return Response({"detail": "Board deleted."}, status=status.HTTP_204_NO_CONTENT)
+
+
+class ColumnCreateView(generics.CreateAPIView):
+    pass
