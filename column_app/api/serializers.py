@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from django.db.models import F
+from django.db import transaction
 
 from column_app.models import Column
 
@@ -30,18 +31,18 @@ class ColumnUpdateSerializer(serializers.ModelSerializer):
         old_position = instance.position
         new_position = validated_data.get('position', old_position)
 
-        if old_position == new_position:
+        if new_position == old_position:
             return super().update(instance, validated_data)
 
         board = instance.board
-        columns = board.columns.order_by('position')
 
-        if new_position > old_position:
-            columns.filter(position__gt=old_position, position__lte=new_position).update(
-                position=F('position') - 1)
-        else:
-            columns.filter(position__lt=old_position, position__gte=new_position).update(
-                position=F('position') + 1)
+        with transaction.atomic():
+            columns = board.columns.order_by('position')
 
-        instance.position = new_position
-        return super().update(instance, validated_data)
+            if new_position > old_position:
+                columns.filter(position__gt=old_position, position__lte=new_position).update(position=F('position') - 1)
+            else:
+                columns.filter(position__lt=old_position, position__gte=new_position).update(position=F('position') + 1)
+
+            instance.position = new_position
+            return super().update(instance, validated_data)
