@@ -1,10 +1,12 @@
-from rest_framework import status, generics, viewsets
+from rest_framework import status, generics, viewsets, mixins
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
+from django.db.models import Max
+from django.shortcuts import get_object_or_404
 
-from boards_app.models import Board
-from .serializers import BoardListSerializer, BoardCreateSerializer, BoardDetailSerializer, BoardUpdateSerializer
+from boards_app.models import Board, Column
+from .serializers import BoardListSerializer, BoardCreateSerializer, BoardDetailSerializer, BoardUpdateSerializer, ColumnCreateSerializer, ColumnUpdateSerializer
 
 
 class BoardListCreateView(generics.ListCreateAPIView):
@@ -62,4 +64,40 @@ class BoardDetailViewSet(viewsets.GenericViewSet):
 
 
 class ColumnCreateView(generics.CreateAPIView):
-    pass
+    permission_classes = [IsAuthenticated]
+    serializer_class = ColumnCreateSerializer
+
+    def get_board(self, pk):
+        return get_object_or_404(Board, pk=pk)
+
+    def create(self, request, *args, **kwargs):
+        board_pk = self.kwargs.get('pk')
+        board = self.get_board(board_pk)
+        max_position = board.columns.aggregate(Max('position'))['position__max'] or 0
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save(board=board, position=max_position + 1)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+class ColumnUpdateDestroyView(mixins.UpdateModelMixin, mixins.DestroyModelMixin, generics.GenericAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = ColumnUpdateSerializer
+
+    def get_board(self, pk):
+        return get_object_or_404(Board, pk=pk)
+
+    def get_column(self, board, column_pk):
+        return get_object_or_404(Column, board=board, pk=column_pk)
+
+    def get_object(self):
+        board_pk = self.kwargs.get('pk')
+        column_pk = self.kwargs.get('column_pk')
+        board = self.get_board(board_pk)
+        return self.get_column(board, column_pk)
+
+    def patch(self, request, *args, **kwargs):
+        return self.partial_update(request, *args, **kwargs)
+
+    def delete(self, request, *args, **kwargs):
+        return self.destroy(request, *args, **kwargs)

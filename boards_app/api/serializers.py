@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from auth_app.models import CustomUserProfile
-from boards_app.models import Board
+from boards_app.models import Board, Column
 
 
 class BoardListSerializer(serializers.ModelSerializer):
@@ -66,3 +66,20 @@ class BoardUpdateSerializer(serializers.ModelSerializer):
             instance.members.set(final_members)
         instance.save()
         return instance
+
+
+class ColumnCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Column
+        fields = ('name', 'wip_limit')
+    
+    def save(self, **kwargs):
+        board = kwargs.pop('board')
+        position = kwargs.pop('position')
+        return Column.objects.create(board=board, position=position, **self.validated_data)
+
+
+class ColumnUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Column
+        fields = ('name', 'position', 'wip_limit')
