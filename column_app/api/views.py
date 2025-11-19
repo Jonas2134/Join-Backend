@@ -41,22 +41,17 @@ class ColumnListCreateView(generics.ListCreateAPIView):
 class ColumnDetailViewSet(viewsets.GenericViewSet):
     permission_classes = [IsAuthenticated, IsBoardMemberOrOwner]
 
-    def get_serializer(self, *args, **kwargs):
+    def get_serializer_class(self):
         if self.action == 'partial_update':
             return ColumnUpdateSerializer
         return ColumnSerializer
 
-    def get_board(self):
-        pk = self.kwargs.get['pk']
-        return get_object_or_404(Board, pk=pk)
-
-    def get_column(self, board):
+    def get_column(self):
         column_pk = self.kwargs.get('column_pk')
-        return get_object_or_404(Column, board=board, pk=column_pk)
+        return get_object_or_404(Column, pk=column_pk)
 
     def get_object(self):
-        board = self.get_board()
-        return self.get_column(board)
+        return self.get_column()
 
     def retrieve(self, request, *args, **kwargs):
         column = self.get_object()

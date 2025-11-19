@@ -10,6 +10,6 @@ column_detail = ColumnDetailViewSet.as_view({
 
 urlpatterns = [
     path('boards/<int:pk>/columns/', ColumnListCreateView.as_view(), name='column-list-create'),
-    path('boards/<int:pk>/columns/<int:column_pk>/', column_detail),
+    path('columns/<int:column_pk>/', column_detail),
 ]
 

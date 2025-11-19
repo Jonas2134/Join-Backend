@@ -20,11 +20,15 @@ class Task(models.Model):
 
     def save(self, *args, **kwargs):
         with transaction.atomic():
-            original = (Task.objects.select_for_update().filter(pk=self.pk).first() if self.pk else None)
-            column_changed = (original is not None and original.column_id != self.column_id)
+            original = (
+                Task.objects.select_for_update().filter(pk=self.pk).first()
+                if self.pk else None
+            )
+            column_changed = original and original.column_id != self.column_id
             column = Column.objects.select_for_update().get(pk=self.column_id)
-            if column_changed and column.wip_limit:
-                raise ValidationError("Cannot move task to this column because it reached its WIP limit.")
+            if (self.pk is None or column_changed) and column.wip_limit is not None:
+                if column.tasks.count() >= column.wip_limit:
+                    raise ValidationError("Cannot add/move task to this column because it reached its WIP limit.")
             creating = self.pk is None
             if creating or column_changed or self.position == 0:
                 last = Task.objects.filter(column=self.column).order_by('-position').first()
@@ -32,4 +36,4 @@ class Task(models.Model):
             super().save(*args, **kwargs)
 
     def __str__(self):
-        return self.title
+        return f"{self.title} (Column: {self.column.name})"
