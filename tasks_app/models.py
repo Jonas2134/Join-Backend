@@ -1,7 +1,7 @@
 from django.db import models, transaction
 from django.core.exceptions import ValidationError
 
-from boards_app.models import Column
+from column_app.models import Column
 from auth_app.models import CustomUserProfile
 
 # Create your models here.

@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'auth_app',
     'boards_app',
     'column_app',
+    'tasks_app',
 ]
 
 MIDDLEWARE = [
