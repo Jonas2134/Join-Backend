@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'auth_app',
     'boards_app',
+    'column_app',
 ]
 
 MIDDLEWARE = [
