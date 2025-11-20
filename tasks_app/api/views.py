@@ -4,13 +4,14 @@ from rest_framework.permissions import IsAuthenticated
 from django.db.models import Max
 from django.shortcuts import get_object_or_404
 
+from core.permissions import IsBoardMemberOrOwner
 from column_app.models import Column
 from tasks_app.models import Task
-from .serializers import TaskSerializer, TaskCreateSerializer
+from .serializers import TaskSerializer, TaskCreateSerializer, TaskUpdateSerializer
 
 
 class TaskListCreateView(generics.ListCreateAPIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsBoardMemberOrOwner]
 
     def get_serializer_class(self):
         if self.request.method == 'POST':
@@ -35,3 +36,39 @@ class TaskListCreateView(generics.ListCreateAPIView):
         serializer.is_valid(raise_exception=True)
         serializer.save(column=column, position=max_position + 1)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+    
+
+class TaskDetailViewSet(viewsets.GenericViewSet):
+    permission_classes = [IsAuthenticated, IsBoardMemberOrOwner]
+
+    def get_serializer_class(self):
+        if self.action == 'partial_update':
+            return TaskUpdateSerializer
+        return TaskSerializer
+    
+    def get_task(self):
+        pk = self.kwargs.get('task_pk')
+        return get_object_or_404(Task, pk=pk)
+    
+    def get_object(self):
+        return self.get_task()
+    
+    def retrieve(self, request, *args, **kwargs):
+        task = self.get_object()
+        self.check_permissions(request)
+        serializer = self.get_serializer(task)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+    def partial_update(self, request, *args, **kwargs):
+        task = self.get_object()
+        self.check_permissions(request)
+        serializer = self.get_serializer(task, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+    def destroy(self, request, *args, **kwargs):
+        task = self.get_object()
+        self.check_permissions(request)
+        task.delete()
+        return Response({"detail": "Task deleted."}, status=status.HTTP_204_NO_CONTENT)

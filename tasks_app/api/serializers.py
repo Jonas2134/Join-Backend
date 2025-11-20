@@ -17,3 +17,9 @@ class TaskCreateSerializer(serializers.ModelSerializer):
         column = kwargs.pop('column')
         position = kwargs.pop('position')
         return Task.objects.create(column=column, position=position, **self.validated_data)
+
+
+class TaskUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Task
+        fields = ('title', 'description', 'assignee', 'column', 'position')

@@ -4,10 +4,10 @@ from rest_framework.permissions import IsAuthenticated
 from django.db.models import Max
 from django.shortcuts import get_object_or_404
 
+from core.permissions import IsBoardMemberOrOwner
 from boards_app.models import Board
 from column_app.models import Column
 from .serializers import ColumnSerializer, ColumnCreateSerializer, ColumnUpdateSerializer
-from .permissions import IsBoardMemberOrOwner
 
 
 class ColumnListCreateView(generics.ListCreateAPIView):
@@ -47,8 +47,8 @@ class ColumnDetailViewSet(viewsets.GenericViewSet):
         return ColumnSerializer
 
     def get_column(self):
-        column_pk = self.kwargs.get('column_pk')
-        return get_object_or_404(Column, pk=column_pk)
+        pk = self.kwargs.get('column_pk')
+        return get_object_or_404(Column, pk=pk)
 
     def get_object(self):
         return self.get_column()
