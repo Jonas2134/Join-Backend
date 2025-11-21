@@ -5,7 +5,7 @@ from django.db.models import Max
 from django.shortcuts import get_object_or_404
 
 from core.permissions import IsBoardMemberOrOwner
-from boards_app.models import Board
+from board_app.models import Board
 from column_app.models import Column
 from .serializers import ColumnSerializer, ColumnCreateSerializer, ColumnUpdateSerializer
 

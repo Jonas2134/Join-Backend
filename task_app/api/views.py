@@ -6,7 +6,7 @@ from django.shortcuts import get_object_or_404
 
 from core.permissions import IsBoardMemberOrOwner
 from column_app.models import Column
-from tasks_app.models import Task
+from task_app.models import Task
 from .serializers import TaskSerializer, TaskCreateSerializer, TaskUpdateSerializer
 
 

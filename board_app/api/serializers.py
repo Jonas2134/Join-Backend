@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from auth_app.models import CustomUserProfile
-from boards_app.models import Board
+from board_app.models import Board
 
 
 class BoardListSerializer(serializers.ModelSerializer):

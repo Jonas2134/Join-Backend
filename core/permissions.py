@@ -1,6 +1,6 @@
 from rest_framework.permissions import BasePermission
 
-from boards_app.models import Board
+from board_app.models import Board
 
 class IsBoardMemberOrOwner(BasePermission):
     message = "You do not have permission to access this board."

@@ -1,6 +1,6 @@
 from django.db import models, transaction
 
-from boards_app.models import Board
+from board_app.models import Board
 
 # Create your models here.
 
