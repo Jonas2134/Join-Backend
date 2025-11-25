@@ -40,28 +40,22 @@ class ColumnListCreateView(generics.ListCreateAPIView):
 
 class ColumnDetailViewSet(viewsets.GenericViewSet):
     permission_classes = [IsAuthenticated, IsBoardMemberOrOwner]
+    queryset = Column.objects.all()
+    lookup_field = "pk"
+    lookup_url_kwarg = "column_pk"
 
     def get_serializer_class(self):
         if self.action == 'partial_update':
             return ColumnUpdateSerializer
         return ColumnSerializer
 
-    def get_column(self):
-        pk = self.kwargs.get('column_pk')
-        return get_object_or_404(Column, pk=pk)
-
-    def get_object(self):
-        return self.get_column()
-
     def retrieve(self, request, *args, **kwargs):
         column = self.get_object()
-        self.check_permissions(request)
         serializer = self.get_serializer(column)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def partial_update(self, request, *args, **kwargs):
         column = self.get_object()
-        self.check_permissions(request)
         serializer = self.get_serializer(column, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
@@ -69,6 +63,5 @@ class ColumnDetailViewSet(viewsets.GenericViewSet):
 
     def destroy(self, request, *args, **kwargs):
         column = self.get_object()
-        self.check_permissions(request)
         column.delete()
         return Response({"detail": "Column deleted."}, status=status.HTTP_204_NO_CONTENT)

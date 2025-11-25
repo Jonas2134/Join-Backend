@@ -2,6 +2,7 @@ from rest_framework import status, generics, viewsets
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 
+from core.permissions import IsBoardMemberOrOwner
 from board_app.models import Board
 from .serializers import BoardListSerializer, BoardCreateSerializer, BoardDetailSerializer, BoardUpdateSerializer
 
@@ -25,7 +26,7 @@ class BoardListCreateView(generics.ListCreateAPIView):
 
 
 class BoardDetailViewSet(viewsets.GenericViewSet):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsBoardMemberOrOwner]
     queryset = Board.objects.all()
     lookup_field = 'pk'
 
@@ -38,15 +39,11 @@ class BoardDetailViewSet(viewsets.GenericViewSet):
     
     def retrieve(self, request, *args, **kwargs):
         board = self.get_object()
-        if request.user != board.owner and request.user not in board.members.all():
-            return Response({"detail": "Not allowed."}, status=status.HTTP_403_FORBIDDEN)
         serializer = self.get_serializer(board)
         return Response(serializer.data, status=status.HTTP_200_OK)
     
     def partial_update(self, request, *args, **kwargs):
         board = self.get_object()
-        if request.user != board.owner and request.user not in board.members.all():
-            return Response({"detail": "Not allowed."}, status=status.HTTP_403_FORBIDDEN)
         serializer = self.get_serializer(board, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         updated = serializer.save()

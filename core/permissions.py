@@ -7,7 +7,7 @@ from task_app.models import Task
 
 
 class IsBoardMemberOrOwner(BasePermission):
-    message = "You do not have permission to access this board."
+    message = "You are not allowed."
 
     def get_board(self, obj):
         if hasattr(obj, "members"):

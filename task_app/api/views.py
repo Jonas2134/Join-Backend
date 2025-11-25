@@ -40,28 +40,22 @@ class TaskListCreateView(generics.ListCreateAPIView):
 
 class TaskDetailViewSet(viewsets.GenericViewSet):
     permission_classes = [IsAuthenticated, IsBoardMemberOrOwner]
+    queryset = Task.objects.all()
+    lookup_field = "pk"
+    lookup_url_kwarg = "task_pk"
 
     def get_serializer_class(self):
         if self.action == 'partial_update':
             return TaskUpdateSerializer
         return TaskSerializer
     
-    def get_task(self):
-        pk = self.kwargs.get('task_pk')
-        return get_object_or_404(Task, pk=pk)
-    
-    def get_object(self):
-        return self.get_task()
-    
     def retrieve(self, request, *args, **kwargs):
         task = self.get_object()
-        self.check_permissions(request)
         serializer = self.get_serializer(task)
         return Response(serializer.data, status=status.HTTP_200_OK)
     
     def partial_update(self, request, *args, **kwargs):
         task = self.get_object()
-        self.check_permissions(request)
         serializer = self.get_serializer(task, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         serializer.save()
@@ -69,6 +63,5 @@ class TaskDetailViewSet(viewsets.GenericViewSet):
     
     def destroy(self, request, *args, **kwargs):
         task = self.get_object()
-        self.check_permissions(request)
         task.delete()
         return Response({"detail": "Task deleted."}, status=status.HTTP_204_NO_CONTENT)

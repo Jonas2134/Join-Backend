@@ -1,4 +1,5 @@
 from django.db import models, transaction
+from django.db.models import F
 from django.core.exceptions import ValidationError
 
 from column_app.models import Column
@@ -30,10 +31,17 @@ class Task(models.Model):
                 if column.tasks.count() >= column.wip_limit:
                     raise ValidationError("Cannot add/move task to this column because it reached its WIP limit.")
             creating = self.pk is None
-            if creating or column_changed or self.position == 0:
+            if creating or self.position == 0:
                 last = Task.objects.filter(column=self.column).order_by('-position').first()
                 self.position =(last.position + 1) if last else 1
             super().save(*args, **kwargs)
+    
+    def delete(self, *args, **kwargs):
+        column = self.column
+        position = self.position
+        with transaction.atomic():
+            super().delete(*args, **kwargs)
+            column.tasks.filter(position__gt=position).update(position=F('position') - 1)
 
     def __str__(self):
         return f"{self.title} (Column: {self.column.name})"

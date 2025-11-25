@@ -1,4 +1,5 @@
 from django.db import models, transaction
+from django.db.models import F
 
 from board_app.models import Board
 
@@ -34,6 +35,13 @@ class Column(models.Model):
                 last = Column.objects.filter(board=self.board).order_by('-position').first()
                 self.position = (last.position + 1) if last else 1
             super().save(*args, **kwargs)
+    
+    def delete(self, *args, **kwargs):
+        board = self.board
+        position = self.position
+        with transaction.atomic():
+            super().delete(*args, **kwargs)
+            board.columns.filter(position__gt=position).update(position=F('position') - 1)
 
     def __str__(self):
         return f"{self.name} (Board: {self.board.title})"
