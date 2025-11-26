@@ -21,6 +21,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(os.path.join(BASE_DIR, ".env"))
 
 
+def str_to_bool(value: str) -> bool:
+    return value.lower() in ("true", "1", "yes", "on")
+
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
@@ -30,7 +34,10 @@ SECRET_KEY = 'django-insecure-vrzpr7l#@d1uq_0nauzc&+r@w1z%$9(u5i2ye_f7w4vyy0-(b$
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', default='localhost').split(',')
+CORF_TRUSTED_ORIGINS=os.environ.get('CSRF_TRUSTED_ORIGINS', default='http://localhost:5173').split(',')
+CORS_ALLOW_CREDENTIALS = str_to_bool(os.environ.get('CORS_ALLOW_CREDENTIALS', default='True'))
+CORS_ALLOWED_ORIGINS = os.environ.get('CORS_ALLOWED_ORIGINS', default='http://127.0.0.1:5173').split(',')
 
 
 # Application definition
