@@ -3,12 +3,15 @@ from django.db.models import F
 from django.db import transaction
 
 from column_app.models import Column
+from task_app.api.serializers import TaskSerializer
 
 
 class ColumnSerializer(serializers.ModelSerializer):
+    tasks = TaskSerializer(many=True, read_only=True)
+
     class Meta:
         model = Column
-        fields = ('id', 'name', 'position', 'wip_limit', 'created_at', 'updated_at')
+        fields = ('id', 'name', 'position', 'wip_limit', 'tasks', 'created_at', 'updated_at')
 
 
 class ColumnCreateSerializer(serializers.ModelSerializer):

@@ -2,6 +2,8 @@ from rest_framework import serializers
 
 from auth_app.models import CustomUserProfile
 from board_app.models import Board
+from column_app.api.serializers import ColumnSerializer
+from contact_and_profile_app.api.serializers import MemberNestedSerializer
 
 
 class BoardListSerializer(serializers.ModelSerializer):
@@ -34,11 +36,12 @@ class BoardCreateSerializer(serializers.ModelSerializer):
 
 
 class BoardDetailSerializer(serializers.ModelSerializer):
-    members = serializers.PrimaryKeyRelatedField(queryset=CustomUserProfile.objects.all(), many=True)
+    members = MemberNestedSerializer(many=True, read_only=True)
+    columns = ColumnSerializer(many=True, read_only=True)
     
     class Meta:
         model = Board
-        fields = ('id', 'title', 'description', 'owner', 'members', 'is_active', 'created_at', 'updated_at')
+        fields = ('id', 'title', 'description', 'owner', 'members', 'columns', 'is_active', 'created_at', 'updated_at')
 
 
 class BoardUpdateSerializer(serializers.ModelSerializer):
