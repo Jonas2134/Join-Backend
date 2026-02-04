@@ -2,7 +2,7 @@ from rest_framework import status, generics, viewsets
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 
-from core.permissions import IsBoardMemberOrOwner
+from core.permissions import IsBoardMemberOrOwner, IsBoardOwner
 from board_app.models import Board
 from .serializers import BoardListSerializer, BoardCreateSerializer, BoardDetailSerializer, BoardUpdateSerializer
 
@@ -26,9 +26,13 @@ class BoardListCreateView(generics.ListCreateAPIView):
 
 
 class BoardDetailViewSet(viewsets.GenericViewSet):
-    permission_classes = [IsAuthenticated, IsBoardMemberOrOwner]
     queryset = Board.objects.all()
     lookup_field = 'pk'
+
+    def get_permissions(self):
+        if self.action in ['partial_update', 'destroy']:
+            return [IsAuthenticated(), IsBoardOwner()]
+        return [IsAuthenticated(), IsBoardMemberOrOwner()]
 
     def get_serializer_class(self):
         if self.action == 'retrieve':
@@ -51,7 +55,5 @@ class BoardDetailViewSet(viewsets.GenericViewSet):
     
     def destroy(self, request, *args, **kwargs):
         board = self.get_object()
-        if request.user != board.owner:
-            return Response({"detail": "Only the owner can delete the board."}, status=status.HTTP_403_FORBIDDEN)
         board.delete()
         return Response({"detail": "Board deleted."}, status=status.HTTP_204_NO_CONTENT)

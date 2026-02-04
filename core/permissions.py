@@ -6,6 +6,36 @@ from column_app.models import Column
 from task_app.models import Task
 
 
+class IsBoardOwner(BasePermission):
+    message = "Only the board owner is allowed to perform this action."
+
+    def get_board(self, obj):
+        if hasattr(obj, "owner"):
+            return obj
+        if hasattr(obj, "board"):
+            return obj.board
+        if hasattr(obj, "column"):
+            return obj.column.board
+        return None
+
+    def get_board_from_view(self, view):
+        if "pk" in view.kwargs:
+            return get_object_or_404(Board, pk=view.kwargs["pk"])
+        if "board_pk" in view.kwargs:
+            return get_object_or_404(Board, pk=view.kwargs["board_pk"])
+        return None
+
+    def has_object_permission(self, request, view, obj):
+        board = self.get_board(obj)
+        return board is not None and request.user == board.owner
+
+    def has_permission(self, request, view):
+        board = self.get_board_from_view(view)
+        if board is None:
+            return True
+        return request.user == board.owner
+
+
 class IsBoardMemberOrOwner(BasePermission):
     message = "You are not allowed."
 
