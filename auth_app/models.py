@@ -9,5 +9,5 @@ from django.contrib.auth.models import AbstractUser
 class CustomUserProfile(AbstractUser):
     tele_number = models.CharField(max_length=25, blank=True, null=True)
     bio = models.TextField(blank=True, null=True)
-    contacts = models.ManyToManyField('self', symmetrical=False, blank=True, related_name='contacted_by')
+    contacts = models.ManyToManyField('self', symmetrical=True, blank=True)
     is_guest = models.BooleanField(default=False)
