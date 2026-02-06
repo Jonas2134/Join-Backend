@@ -1,3 +1,4 @@
+from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
@@ -73,3 +74,31 @@ class LoginSerializer(TokenObtainPairSerializer):
     def _check_password(self, user, password) -> None:
         if not user.check_password(password):
             raise serializers.ValidationError("Incorrect password.")
+
+
+class PasswordChangeSerializer(serializers.Serializer):
+    old_password = serializers.CharField(write_only=True)
+    new_password = serializers.CharField(write_only=True)
+    repeated_new_password = serializers.CharField(write_only=True)
+
+    def validate_old_password(self, value):
+        user = self.context['request'].user
+        if not user.check_password(value):
+            raise serializers.ValidationError("Incorrect password.")
+        return value
+
+    def validate_new_password(self, value):
+        user = self.context['request'].user
+        validate_password(value, user=user)
+        return value
+
+    def validate_repeated_new_password(self, value):
+        new_pw = self.initial_data.get('new_password')
+        if value != new_pw:
+            raise serializers.ValidationError("Passwords do not match.")
+        return value
+
+    def save(self):
+        user = self.context['request'].user
+        user.set_password(self.validated_data['new_password'])
+        user.save()

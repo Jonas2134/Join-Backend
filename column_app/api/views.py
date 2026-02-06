@@ -4,14 +4,14 @@ from rest_framework.permissions import IsAuthenticated
 from django.db.models import Max
 from django.shortcuts import get_object_or_404
 
-from core.permissions import IsBoardMemberOrOwner
+from core.permissions import IsBoardMemberOrOwner, IsBoardActive
 from board_app.models import Board
 from column_app.models import Column
 from .serializers import ColumnSerializer, ColumnCreateSerializer, ColumnUpdateSerializer
 
 
 class ColumnListCreateView(generics.ListCreateAPIView):
-    permission_classes = [IsAuthenticated, IsBoardMemberOrOwner]
+    permission_classes = [IsAuthenticated, IsBoardMemberOrOwner, IsBoardActive]
 
     def get_serializer_class(self):
         if self.request.method == 'POST':
@@ -39,7 +39,7 @@ class ColumnListCreateView(generics.ListCreateAPIView):
 
 
 class ColumnDetailViewSet(viewsets.GenericViewSet):
-    permission_classes = [IsAuthenticated, IsBoardMemberOrOwner]
+    permission_classes = [IsAuthenticated, IsBoardMemberOrOwner, IsBoardActive]
     queryset = Column.objects.all()
     lookup_field = "pk"
     lookup_url_kwarg = "column_pk"

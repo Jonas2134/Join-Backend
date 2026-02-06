@@ -74,3 +74,26 @@ class IsBoardMemberOrOwner(BasePermission):
     def has_permission(self, request, view):
         board = self.get_board_from_view(view)
         return self.user_has_access(request.user, board)
+
+
+class IsBoardActive(BasePermission):
+    message = "This board is archived. No modifications allowed."
+
+    def _get_board(self, view):
+        if "pk" in view.kwargs:
+            return get_object_or_404(Board, pk=view.kwargs["pk"])
+        if "column_pk" in view.kwargs:
+            column = get_object_or_404(Column, pk=view.kwargs["column_pk"])
+            return column.board
+        if "task_pk" in view.kwargs:
+            task = get_object_or_404(Task, pk=view.kwargs["task_pk"])
+            return task.column.board
+        return None
+
+    def has_permission(self, request, view):
+        if request.method in ('GET', 'HEAD', 'OPTIONS'):
+            return True
+        board = self._get_board(view)
+        if board is None:
+            return True
+        return board.is_active

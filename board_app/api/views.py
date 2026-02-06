@@ -11,7 +11,7 @@ class BoardListCreateView(generics.ListCreateAPIView):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        return Board.objects.filter(members=self.request.user)
+        return Board.objects.filter(members=self.request.user, is_active=True)
     
     def get_serializer_class(self):
         if self.request.method == 'POST':

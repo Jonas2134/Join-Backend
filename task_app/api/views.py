@@ -4,14 +4,14 @@ from rest_framework.permissions import IsAuthenticated
 from django.db.models import Max
 from django.shortcuts import get_object_or_404
 
-from core.permissions import IsBoardMemberOrOwner
+from core.permissions import IsBoardMemberOrOwner, IsBoardActive
 from column_app.models import Column
 from task_app.models import Task
 from .serializers import TaskSerializer, TaskCreateSerializer, TaskUpdateSerializer
 
 
 class TaskListCreateView(generics.ListCreateAPIView):
-    permission_classes = [IsAuthenticated, IsBoardMemberOrOwner]
+    permission_classes = [IsAuthenticated, IsBoardMemberOrOwner, IsBoardActive]
 
     def get_serializer_class(self):
         if self.request.method == 'POST':
@@ -39,7 +39,7 @@ class TaskListCreateView(generics.ListCreateAPIView):
     
 
 class TaskDetailViewSet(viewsets.GenericViewSet):
-    permission_classes = [IsAuthenticated, IsBoardMemberOrOwner]
+    permission_classes = [IsAuthenticated, IsBoardMemberOrOwner, IsBoardActive]
     queryset = Task.objects.all()
     lookup_field = "pk"
     lookup_url_kwarg = "task_pk"

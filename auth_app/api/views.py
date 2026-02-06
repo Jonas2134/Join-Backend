@@ -6,7 +6,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from rest_framework_simplejwt.tokens import RefreshToken, TokenError
 
-from .serializers import RegisterSerializer, LoginSerializer
+from .serializers import RegisterSerializer, LoginSerializer, PasswordChangeSerializer
 from auth_app.models import CustomUserProfile
 
 
@@ -119,3 +119,30 @@ class GuestLoginView(APIView):
         response.set_cookie(key='access_token', value=str(access), **COOKIE_KWARGS)
 
         return response
+
+
+class AuthStatusView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        return Response({
+            "is_authenticated": True,
+            "user": {
+                "id": user.id,
+                "username": user.username,
+                "email": user.email,
+                "is_guest": user.is_guest,
+            }
+        }, status=status.HTTP_200_OK)
+
+
+class PasswordChangeView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        serializer = PasswordChangeSerializer(data=request.data, context={'request': request})
+        if serializer.is_valid():
+            serializer.save()
+            return Response({"detail": "Password changed successfully."}, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
