@@ -7,9 +7,18 @@ from contact_and_profile_app.api.serializers import MemberNestedSerializer
 
 
 class BoardListSerializer(serializers.ModelSerializer):
+    member_count = serializers.SerializerMethodField()
+    is_user_owner = serializers.SerializerMethodField()
+
     class Meta:
         model = Board
-        fields = ('id', 'title', 'is_active')
+        fields = ('id', 'title', 'member_count', 'is_user_owner', 'is_active')
+
+    def get_member_count(self, obj):
+        return obj.members.count()
+
+    def get_is_user_owner(self, obj):
+        return self.context['request'].user == obj.owner
 
 
 class BoardCreateSerializer(serializers.ModelSerializer):
