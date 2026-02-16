@@ -12,7 +12,7 @@ class BoardListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Board
-        fields = ('id', 'title', 'member_count', 'is_user_owner', 'is_active')
+        fields = ('id', 'title', 'created_at', 'updated_at', 'member_count', 'is_user_owner', 'is_active')
 
     def get_member_count(self, obj):
         return obj.members.count()
