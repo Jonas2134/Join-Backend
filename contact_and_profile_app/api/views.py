@@ -49,6 +49,19 @@ class UserListView(generics.ListAPIView):
         return queryset
 
 
+class UserDetailView(generics.RetrieveAPIView):
+    serializer_class = ProfileSerializer
+    permission_classes = [IsAuthenticated]
+    queryset = User.objects.all()
+    lookup_field = "pk"
+    lookup_url_kwarg = "user_id"
+
+    def retrieve(self, request, *args, **kwargs):
+        user = self.get_object()
+        serializer = self.get_serializer(user)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
 class AddContactView(APIView):
     permission_classes = [IsAuthenticated]
 
