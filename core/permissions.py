@@ -32,7 +32,7 @@ class IsBoardOwner(BasePermission):
     def has_permission(self, request, view):
         board = self.get_board_from_view(view)
         if board is None:
-            return True
+            return False
         return request.user == board.owner
 
 
@@ -51,6 +51,8 @@ class IsBoardMemberOrOwner(BasePermission):
     def get_board_from_view(self, view):
         if "pk" in view.kwargs:
             return get_object_or_404(Board, pk=view.kwargs["pk"])
+        if "board_pk" in view.kwargs:
+            return get_object_or_404(Board, pk=view.kwargs["board_pk"])
         if "column_pk" in view.kwargs:
             column = get_object_or_404(Column, pk=view.kwargs["column_pk"])
             return column.board
@@ -82,6 +84,8 @@ class IsBoardActive(BasePermission):
     def _get_board(self, view):
         if "pk" in view.kwargs:
             return get_object_or_404(Board, pk=view.kwargs["pk"])
+        if "board_pk" in view.kwargs:
+            return get_object_or_404(Board, pk=view.kwargs["board_pk"])
         if "column_pk" in view.kwargs:
             column = get_object_or_404(Column, pk=view.kwargs["column_pk"])
             return column.board
@@ -95,5 +99,5 @@ class IsBoardActive(BasePermission):
             return True
         board = self._get_board(view)
         if board is None:
-            return True
+            return False
         return board.is_active

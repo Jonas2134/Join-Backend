@@ -6,6 +6,7 @@ from rest_framework.permissions import IsAuthenticated
 
 from .serializers import ProfileSerializer, UserListSerializer, ContactSerializer
 from auth_app.models import CustomUserProfile as User
+from auth_app.api.permissions import NotGuest
 
 
 class ProfileView(generics.RetrieveUpdateAPIView):
@@ -19,11 +20,6 @@ class ProfileView(generics.RetrieveUpdateAPIView):
         profile = get_object_or_404(queryset, id=user.id)
         return profile
 
-    def get(self, request, *args, **kwargs):
-        return super().get(request, *args, **kwargs)
-
-    def patch(self, request, *args, **kwargs):
-        return super().patch(request, *args, **kwargs)
 
 
 class UserListView(generics.ListAPIView):
@@ -63,15 +59,9 @@ class UserDetailView(generics.RetrieveAPIView):
 
 
 class AddContactView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, NotGuest]
 
     def post(self, request, user_id):
-        if request.user.is_guest:
-            return Response(
-                {"detail": "Guest users cannot add contacts."},
-                status=status.HTTP_403_FORBIDDEN
-            )
-
         user_to_add = get_object_or_404(User, id=user_id)
 
         if user_to_add.is_guest:

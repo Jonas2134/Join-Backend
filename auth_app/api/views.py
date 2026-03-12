@@ -6,13 +6,15 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from rest_framework_simplejwt.tokens import RefreshToken, TokenError
 
+from django.conf import settings as django_settings
+
 from .serializers import RegisterSerializer, LoginSerializer, PasswordChangeSerializer
 from auth_app.models import CustomUserProfile
 
 
 COOKIE_KWARGS = {
     'httponly': True,
-    'secure': False,
+    'secure': not django_settings.DEBUG,
     'samesite': 'Lax'
 }
 

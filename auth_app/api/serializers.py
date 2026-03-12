@@ -27,12 +27,15 @@ class RegisterSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Email is already taken.")
         return value
 
+    def validate_password(self, value):
+        validate_password(value)
+        return value
+
     def validate_repeated_password(self, value):
         pw = self.initial_data.get('password')
         if value != pw:
             raise serializers.ValidationError("Passwords do not match.")
         return value
-        
 
     def save(self, **kwargs):
         pw = self.validated_data['password']
@@ -56,13 +59,7 @@ class LoginSerializer(TokenObtainPairSerializer):
         self._check_password(user, password)
 
         attrs['username'] = user.username
-        data = super().validate(attrs)
-        data['user'] = {
-            'id': user.id,
-            'username': user.username,
-            'email': user.email,
-        }
-        return data
+        return super().validate(attrs)
 
     def _check_user_exist(self, username):
         try:

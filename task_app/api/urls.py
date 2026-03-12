@@ -10,5 +10,5 @@ task_detail = TaskDetailViewSet.as_view({
 
 urlpatterns = [
     path('columns/<int:column_pk>/tasks/', TaskListCreateView.as_view(), name='task-list-create'),
-    path('tasks/<int:task_pk>/', task_detail),
+    path('tasks/<int:task_pk>/', task_detail, name='task-detail'),
 ]

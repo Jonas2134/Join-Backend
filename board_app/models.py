@@ -7,7 +7,7 @@ from auth_app.models import CustomUserProfile
 class Board(models.Model):
     title = models.CharField(max_length=255)
     description = models.TextField(blank=True, null=True)
-    owner = models.ForeignKey(CustomUserProfile, on_delete=models.CASCADE, related_name='boards')
+    owner = models.ForeignKey(CustomUserProfile, on_delete=models.PROTECT, related_name='boards')
     members = models.ManyToManyField(CustomUserProfile, blank=True, related_name='member_boards')
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)

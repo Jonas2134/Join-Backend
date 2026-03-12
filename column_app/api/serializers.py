@@ -21,8 +21,7 @@ class ColumnCreateSerializer(serializers.ModelSerializer):
 
     def save(self, **kwargs):
         board = kwargs.pop('board')
-        position = kwargs.pop('position')
-        return Column.objects.create(board=board, position=position, **self.validated_data)
+        return Column.objects.create(board=board, **self.validated_data)
 
 
 class ColumnUpdateSerializer(serializers.ModelSerializer):

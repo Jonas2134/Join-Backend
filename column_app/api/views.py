@@ -1,7 +1,6 @@
 from rest_framework import status, generics, viewsets
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from django.db.models import Max
 from django.shortcuts import get_object_or_404
 
 from core.permissions import IsBoardMemberOrOwner, IsBoardActive
@@ -19,22 +18,18 @@ class ColumnListCreateView(generics.ListCreateAPIView):
         return ColumnSerializer
 
     def get_board(self):
-        pk = self.kwargs['pk']
-        return get_object_or_404(Board, pk=pk)
+        board_pk = self.kwargs['board_pk']
+        return get_object_or_404(Board, pk=board_pk)
 
     def get_queryset(self):
         board = self.get_board()
-        return board.columns.order_by('position')
-
-    def get(self, request, *args, **kwargs):
-        return super().get(request, *args, **kwargs)
+        return board.columns.prefetch_related('tasks').order_by('position')
 
     def create(self, request, *args, **kwargs):
         board = self.get_board()
-        max_position = board.columns.aggregate(Max('position'))['position__max'] or 0
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        serializer.save(board=board, position=max_position + 1)
+        serializer.save(board=board)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
@@ -64,4 +59,4 @@ class ColumnDetailViewSet(viewsets.GenericViewSet):
     def destroy(self, request, *args, **kwargs):
         column = self.get_object()
         column.delete()
-        return Response({"detail": "Column deleted."}, status=status.HTTP_204_NO_CONTENT)
+        return Response(status=status.HTTP_204_NO_CONTENT)

@@ -29,13 +29,13 @@ def str_to_bool(value: str) -> bool:
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-vrzpr7l#@d1uq_0nauzc&+r@w1z%$9(u5i2ye_f7w4vyy0-(b$'
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-vrzpr7l#@d1uq_0nauzc&+r@w1z%$9(u5i2ye_f7w4vyy0-(b$')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = str_to_bool(os.environ.get('DEBUG', 'True'))
 
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', default='localhost').split(',')
-CORF_TRUSTED_ORIGINS=os.environ.get('CSRF_TRUSTED_ORIGINS', default='http://localhost:5173').split(',')
+CSRF_TRUSTED_ORIGINS=os.environ.get('CSRF_TRUSTED_ORIGINS', default='http://localhost:5173').split(',')
 CORS_ALLOW_CREDENTIALS = str_to_bool(os.environ.get('CORS_ALLOW_CREDENTIALS', default='True'))
 CORS_ALLOWED_ORIGINS = os.environ.get('CORS_ALLOWED_ORIGINS', default='http://127.0.0.1:5173').split(',')
 
@@ -151,8 +151,44 @@ REST_FRAMEWORK = {
         'core.authentication.CookieJWTAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticatedOrReadOnly',
+        'rest_framework.permissions.IsAuthenticated',
     ],
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle',
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '100/hour',
+        'user': '1000/hour',
+    },
+}
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': 'WARNING',
+        },
+        'django.request': {
+            'handlers': ['console'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
+    },
 }
 
 SIMPLE_JWT = {

@@ -11,5 +11,5 @@ board_detail = BoardDetailViewSet.as_view({
 
 urlpatterns = [
     path('boards/', BoardListCreateView.as_view(), name='board-list-create'),
-    path('boards/<int:pk>/', board_detail),
+    path('boards/<int:pk>/', board_detail, name='board-detail'),
 ]

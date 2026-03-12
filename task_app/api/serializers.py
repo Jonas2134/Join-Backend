@@ -26,10 +26,18 @@ class TaskCreateSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Assignee is not a member!")
         return value
 
+    def validate(self, attrs):
+        column_pk = self.context["view"].kwargs.get("column_pk")
+        column = Column.objects.get(pk=column_pk)
+        if column.is_at_wip_limit():
+            raise serializers.ValidationError(
+                f"Column '{column.name}' has reached its WIP limit ({column.wip_limit})."
+            )
+        return attrs
+
     def save(self, **kwargs):
         column = kwargs.pop('column')
-        position = kwargs.pop('position')
-        return Task.objects.create(column=column, position=position, **self.validated_data)
+        return Task.objects.create(column=column, **self.validated_data)
 
 
 class TaskUpdateSerializer(serializers.ModelSerializer):
@@ -50,6 +58,10 @@ class TaskUpdateSerializer(serializers.ModelSerializer):
         if instance:
             if value.board != instance.column.board:
                 raise serializers.ValidationError("Column is not in the board!")
+            if value != instance.column and value.is_at_wip_limit():
+                raise serializers.ValidationError(
+                    f"Column '{value.name}' has reached its WIP limit ({value.wip_limit})."
+                )
         return value
 
     def update(self, instance, validated_data):

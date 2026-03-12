@@ -11,22 +11,17 @@ class BoardListCreateView(generics.ListCreateAPIView):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        return Board.objects.filter(members=self.request.user)
+        return Board.objects.filter(members=self.request.user).select_related('owner').prefetch_related('members')
     
     def get_serializer_class(self):
         if self.request.method == 'POST':
             return BoardCreateSerializer
         return BoardListSerializer
     
-    def get(self, request, *args, **kwargs):
-        return super().get(request, *args, **kwargs)
-    
-    def post(self, request, *args, **kwargs):
-        return super().post(request, *args, **kwargs)
 
 
 class BoardDetailViewSet(viewsets.GenericViewSet):
-    queryset = Board.objects.all()
+    queryset = Board.objects.select_related('owner').prefetch_related('members', 'columns', 'columns__tasks')
     lookup_field = 'pk'
 
     def get_permissions(self):
@@ -56,4 +51,4 @@ class BoardDetailViewSet(viewsets.GenericViewSet):
     def destroy(self, request, *args, **kwargs):
         board = self.get_object()
         board.delete()
-        return Response({"detail": "Board deleted."}, status=status.HTTP_204_NO_CONTENT)
+        return Response(status=status.HTTP_204_NO_CONTENT)
