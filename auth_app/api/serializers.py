@@ -50,6 +50,7 @@ class RegisterSerializer(serializers.ModelSerializer):
 class LoginSerializer(TokenObtainPairSerializer):
     username = serializers.CharField()
     password = serializers.CharField(write_only=True)
+    remember_me = serializers.BooleanField(default=False, required=False)
 
     def validate(self, attrs):
         username = attrs.get('username')

@@ -18,6 +18,15 @@ COOKIE_KWARGS = {
     'samesite': 'Lax'
 }
 
+REMEMBER_ME_MAX_AGE = 30 * 24 * 60 * 60  # 30 days in seconds
+
+
+def get_cookie_kwargs(remember_me=False):
+    kwargs = {**COOKIE_KWARGS}
+    if remember_me:
+        kwargs['max_age'] = REMEMBER_ME_MAX_AGE
+    return kwargs
+
 class RegisterView(generics.CreateAPIView):
     serializer_class = RegisterSerializer
     permission_classes = [AllowAny]
@@ -36,14 +45,23 @@ class LoginView(TokenObtainPairView):
     permission_classes = [AllowAny]
 
     def post(self, request, *args, **kwargs):
+        remember_me = request.data.get('remember_me', False)
         response = super().post(request, *args, **kwargs)
         if response.status_code == status.HTTP_200_OK:
             data = response.data
             refresh = data.get('refresh')
             access = data.get('access')
+            cookie_kwargs = get_cookie_kwargs(remember_me)
             response = Response({"detail": "Login successfully!"}, status=status.HTTP_200_OK)
-            response.set_cookie(key='refresh_token', value=refresh, **COOKIE_KWARGS)
-            response.set_cookie(key='access_token', value=access, **COOKIE_KWARGS)
+            response.set_cookie(key='refresh_token', value=refresh, **cookie_kwargs)
+            response.set_cookie(key='access_token', value=access, **cookie_kwargs)
+            if remember_me:
+                response.set_cookie(
+                    key='remember_me', value='true',
+                    max_age=REMEMBER_ME_MAX_AGE,
+                    secure=not django_settings.DEBUG,
+                    samesite='Lax',
+                )
         return response
 
 
@@ -66,6 +84,7 @@ class LogoutView(APIView):
         response = Response({"detail": "Log-Out successfully!"}, status=status.HTTP_200_OK)
         response.delete_cookie('refresh_token')
         response.delete_cookie('access_token')
+        response.delete_cookie('remember_me')
 
         if user.is_guest:
             user.delete()
@@ -85,12 +104,14 @@ class CookieTokenRefreshView(TokenRefreshView):
             serializer.is_valid(raise_exception=True)
         except Exception:
             return Response({"detail": "Invalid refresh token."}, status=status.HTTP_401_UNAUTHORIZED)
+        remember_me = request.COOKIES.get('remember_me') == 'true'
+        cookie_kwargs = get_cookie_kwargs(remember_me)
         access_token = serializer.validated_data.get("access")
         new_refresh = serializer.validated_data.get("refresh")
         response = Response({"access": "Access Token refreshed successfully."}, status=status.HTTP_200_OK)
-        response.set_cookie(key='access_token', value=access_token, **COOKIE_KWARGS)
+        response.set_cookie(key='access_token', value=access_token, **cookie_kwargs)
         if new_refresh:
-            response.set_cookie(key='refresh_token', value=new_refresh, **COOKIE_KWARGS)
+            response.set_cookie(key='refresh_token', value=new_refresh, **cookie_kwargs)
         return response
 
 
