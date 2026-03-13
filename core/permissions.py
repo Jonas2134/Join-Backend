@@ -78,6 +78,23 @@ class IsBoardMemberOrOwner(BasePermission):
         return self.user_has_access(request.user, board)
 
 
+class IsNotBoardOwner(BasePermission):
+    message = "The board owner cannot perform this action."
+
+    def get_board_from_view(self, view):
+        if "pk" in view.kwargs:
+            return get_object_or_404(Board, pk=view.kwargs["pk"])
+        if "board_pk" in view.kwargs:
+            return get_object_or_404(Board, pk=view.kwargs["board_pk"])
+        return None
+
+    def has_permission(self, request, view):
+        board = self.get_board_from_view(view)
+        if board is None:
+            return False
+        return request.user != board.owner
+
+
 class IsBoardActive(BasePermission):
     message = "This board is archived. No modifications allowed."
 

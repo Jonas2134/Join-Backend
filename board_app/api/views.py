@@ -2,7 +2,8 @@ from rest_framework import status, generics, viewsets
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 
-from core.permissions import IsBoardMemberOrOwner, IsBoardOwner
+from core.permissions import IsBoardMemberOrOwner, IsBoardOwner, IsNotBoardOwner
+from auth_app.api.permissions import NotGuest
 from board_app.models import Board
 from .serializers import BoardListSerializer, BoardCreateSerializer, BoardDetailSerializer, BoardUpdateSerializer
 
@@ -27,6 +28,8 @@ class BoardDetailViewSet(viewsets.GenericViewSet):
     def get_permissions(self):
         if self.action in ['partial_update', 'destroy']:
             return [IsAuthenticated(), IsBoardOwner()]
+        if self.action == 'leave':
+            return [IsAuthenticated(), IsBoardMemberOrOwner(), IsNotBoardOwner(), NotGuest()]
         return [IsAuthenticated(), IsBoardMemberOrOwner()]
 
     def get_serializer_class(self):
@@ -52,3 +55,8 @@ class BoardDetailViewSet(viewsets.GenericViewSet):
         board = self.get_object()
         board.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+    def leave(self, request, *args, **kwargs):
+        board = self.get_object()
+        board.members.remove(request.user)
+        return Response({"detail": "You have left the board."}, status=status.HTTP_200_OK)
