@@ -20,15 +20,22 @@ class TaskCreateSerializer(serializers.ModelSerializer):
         column_pk = self.context["view"].kwargs.get("column_pk")
         if not column_pk:
             raise serializers.ValidationError("ID not found!")
-        column = Column.objects.get(pk=column_pk)
+        try:
+            column = Column.objects.get(pk=column_pk)
+        except Column.DoesNotExist:
+            raise serializers.ValidationError("Column not found!")
         board = column.board
-        if value not in board.members.all():
+        if not board.members.filter(id=value.id).exists():
             raise serializers.ValidationError("Assignee is not a member!")
         return value
 
     def validate(self, attrs):
         column_pk = self.context["view"].kwargs.get("column_pk")
-        column = Column.objects.get(pk=column_pk)
+        try:
+            column = Column.objects.get(pk=column_pk)
+        except Column.DoesNotExist:
+            raise serializers.ValidationError("Column not found!")
+        # Pre-check for better error message; Task.save() enforces this atomically.
         if column.is_at_wip_limit():
             raise serializers.ValidationError(
                 f"Column '{column.name}' has reached its WIP limit ({column.wip_limit})."
@@ -47,9 +54,12 @@ class TaskUpdateSerializer(serializers.ModelSerializer):
 
     def validate_assignee(self, value):
         task_pk = self.context["view"].kwargs.get("task_pk")
-        task = Task.objects.get(pk=task_pk)
+        try:
+            task = Task.objects.get(pk=task_pk)
+        except Task.DoesNotExist:
+            raise serializers.ValidationError("Task not found!")
         board = task.column.board
-        if value not in board.members.all():
+        if not board.members.filter(id=value.id).exists():
             raise serializers.ValidationError("Assignee is not a member!")
         return value
 
