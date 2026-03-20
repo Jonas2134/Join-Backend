@@ -1,0 +1,17 @@
+.git
+.gitignore
+.env
+.env.docker
+db.sqlite3
+__pycache__
+*.py[cod]
+venv/
+env/
+.venv/
+.vscode/
+.idea/
+.claude/
+CLAUDE.md
+up.sh
+docs/
+*.md
