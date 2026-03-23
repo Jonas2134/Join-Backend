@@ -2,7 +2,7 @@ services:
   db:
     image: postgres:16-alpine
     env_file:
-      - .env.docker
+      - .env
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
@@ -11,7 +11,7 @@ services:
   web:
     build: .
     env_file:
-      - .env.docker
+      - .env
     ports:
       - "8000:8000"
     volumes:

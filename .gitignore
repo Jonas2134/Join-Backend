@@ -3,7 +3,6 @@ venv/
 env/
 ENV/
 .env
-.env.docker
 .venv
 .env/
 .venv/
