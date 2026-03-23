@@ -1,6 +1,6 @@
 # Join Backend
 
-**Join Backend** is the Backend service for Join, a Kanban board application. It is built using Django and Django REST Framework, providing a robust API for managing boards, lists, cards, and user authentication.
+**Join Backend** is the Backend service for [Join](https://github.com/Jonas2134/Join-Frontend), a Kanban board application. It is built using Django and Django REST Framework, providing a robust API for managing boards, lists, cards, and user authentication.
 
 ---
 
