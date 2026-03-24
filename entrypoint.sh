@@ -9,7 +9,7 @@ try:
     s.connect(('${DB_HOST:-db}', ${DB_PORT:-5432}))
     s.close()
     exit(0)
-except:
+except Exception:
     exit(1)
 " 2>/dev/null; do
     echo "PostgreSQL ist noch nicht erreichbar - warte..."
